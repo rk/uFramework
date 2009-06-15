@@ -44,6 +44,8 @@ Micro isn't a product.  I develop Micro as a part of my own code-base, and maint
 
 Micro is minimalist: it will *never* bloat.  The functionality included with Micro won't change unless necessary.  The code behind the framework may shrink or grow, but the core functionality will only change slowly.
 
+Micro can be used internally at a corporation or business without any fees or legal snafus, just so long as no money is made from the derived software.
+
 Micro was made by an individual for his own purposes.  When you use it you make the author happy to have made something good enough for your purposes.   And if you donate, then you know that you've made my day even if it is only $5.
 
   [cc]: http://creativecommons.org/licenses/by-sa/3.0/us/
