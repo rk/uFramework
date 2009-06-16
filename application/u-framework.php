@@ -32,13 +32,13 @@
 ** To satisfy the terms of the above license, you must state somewhere in either your            **
 ** documentation, readme, website, or derivative work a "powered by" or "built on" notice that   **
 ** refers to µFramework as my property and provides the latest web address to the project's      **
-** website or repository.                                                                        **
+** website.                                                                                      **
 **                                                                                               **
 ** This attribution needn't be conspicuous or in large, bold letters.  But try to make it able   **
 ** to be found and read.  After all, you're using my pet project and I'd love to know.           **
 ***************************************************************************************************/
 
-define('uFRAMEWORK', '0.3.4');
+define('uFRAMEWORK', '0.3.5');
 
 class Input {
   private $_post = null;
@@ -53,7 +53,7 @@ class Input {
     //   2. splits the file called on index.php;
     //   3. takes the last item from the array;
     //   4. and then trims any outside slashes.
-    $uri = trim(array_pop(explode('index.php', str_replace("\\", '/', $_SERVER['PHP_SELF']))), '/');
+    $uri = trim(array_pop(explode('index.php', str_replace("\\", '/', $_SERVER['REQUEST_URI']))), '/');
     $this->request_url = $uri;
     if(isset($uri[0])) {
       $this->segments = explode('/', $uri);
@@ -83,6 +83,10 @@ class Input {
   
   function uri($number) {
     return isset($this->segments[$number]) ? $this->segments[$number] : null;
+  }
+  
+  function debug_post() {
+    print_r($this->_post);
   }
 }
 
