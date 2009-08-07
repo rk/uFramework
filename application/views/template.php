@@ -4,6 +4,6 @@
 </head>
 <body>
 <?php echo $body; ?>
-<p>Created in <?php echo $elapsed_time; ?> seconds.</p>
+<p>Created in <?php echo round(microtime(true) - START, 4); ?> seconds.</p>
 </body>
 </html>

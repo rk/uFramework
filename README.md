@@ -1,6 +1,15 @@
 &micro;Framework
 ================
 
+Version 1.0RC1 is Here!
+--------------------
+
+This is good news and I'm almost unsure of if I should be excited or not. After almost two months of silence the internal, very tentative, heavily refactored and rewritten version 1.0 is nearly ready for release. Instead of a changelog, which would be too much to maintain over two months of chaotic programming, I may as well state what is the same as before.
+
+The controller class hasn't changed, much. It is much slimmer now, though, and has only one method (`$this->view`) which used to be in an output class. I found that having a seperate class for output brought no value. And that's where the similarities end.
+
+Perhaps now you see why it's been taking so long. Backwards-compatibility is thoroughly broken, the documentation is no longer relevant, and I've been redesigning the project website to herald the change. There is still much to do, but that's why I'm only committing a release candidate for the moment.
+
 Origins of &micro;Framework
 ---------------------------
 
@@ -36,9 +45,9 @@ Security is always a concern, so I've done a modicum of work towards that&mdash;
 Should You Use Micro?
 ---------------------
 
-Micro will always be free for noncommercial use, and is licensed under the [Creative Commons Non-Commercial Share-Alike US license][cc].  (Whew!)  Alternative licensing is available by request, so contact me and we can negotiate something out.  If you have donated, or are considering it, contact me and I'll put in the physical mail a letter that is signed, granting you the use of &micro;Framework in whatever product you'd like to license it for&mdash;no "upgrade fees" necessary as development goes on.
+Micro will always be free for all uses, and is licensed under the [Creative Commons Attribution Share-Alike US license][cc]. (Whew!)
 
-So, that aside, why should you use Micro?
+So, aside from generous licensing, why should you use Micro?
 
 Micro isn't a product.  I develop Micro as a part of my own code-base, and maintain it for my own use.  Whether or not you, or anyone else, uses it or donates to it, Micro will always be maintained.
 

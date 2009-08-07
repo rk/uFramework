@@ -1,7 +1,12 @@
+<Files ~ "^\.ht">
+  Order allow,deny
+  Deny from all
+  Satisfy All
+</Files>
+
 <IfModule mod_rewrite.c>
   RewriteEngine on
-  # skip if whitelisted directory
-  RewriteRule ^(images|css|js|robots\.txt|index\.php) - [L]
-  # rewrite everything else to index.php/uri
-  RewriteRule . index.php%{ENV:REQUEST_URI} [NE,L]
+  # skip whitelisted directories
+  RewriteRule ^(stylesheets|images|javascripts|favicon|robots\.txt|index\.php) - [L]
+  RewriteRule ([-_\w\/]*) ?p=$1 [NE,NC,QSA]
 </IfModule>
