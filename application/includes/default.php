@@ -21,10 +21,10 @@ Micro::add_route('#^(?P<controller>[\w][-_\w]*)(?:/(?P<action>[\w][-_\w]*))?(?P<
 define('REQ_PATH', dirname($_SERVER['PHP_SELF']) . '/');
 
 function absolute_url($url) {
-  return REQ_PATH . $url;
+  return REQ_PATH . urlencode($url);
 }
 
-function link($url, $text, $class='') {
+function link_to($url, $text, $class='') {
   $uri = absolute_url($url);
   if(empty($class)) {
     return "<a href=\"$uri\">$text</a>";
