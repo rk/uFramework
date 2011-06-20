@@ -24,7 +24,20 @@
 define('START', microtime(true));
 define('MICRO', '1.0RC');
 define('REQUEST_URI', isset($_GET['p']) ? $_GET['p'] : '');
+define('MICRO_PATH', dirname(__FILE__))
 error_reporting(E_ALL | E_STRICT);
+
+function __autoload($class) {
+  $paths = array('includes', 'controllers');
+  
+  foreach($paths as $path) {
+    $file = MICRO_PATH . "/application/${path}/" . strtolower($class) . '.class.php';
+    
+    if(file_exists($file)) {
+      include $file;
+    }
+  }
+}
 
 function redirect($to) {
   header('Location: '.$to);
@@ -36,23 +49,49 @@ function either($a,$b) {
   return empty($a) ? $b : $a;
 }
 
+class TemplateException extends Exception {}
+
 abstract class Controller {
-  protected function view($name, $bind=array()) {
-    ob_start();
-    $base = './application/views/'.strtolower($name);
-    foreach(array('.php', '.html', '.htm', '.txt') as $ext) {
-      if(file_exists($base.$ext)) {
-        if($ext == '.php') {
-          extract($bind);
-          include $base.$ext;
-        } else {
-          readfile($base.$ext);
-        }
-        return ob_get_clean();
+  /**
+   * Returns the rendered template. If the template is not found, the method throws an exception.
+   * If the method is called with a $layout param, that "view" is called with a $yield variable
+   * containing the rendered view included in the local variables.
+   * 
+   * @param string $name The name of the template under /application/views/ minus the .php extension.
+   * @param array $bind An associative array containing the template's local variables.
+   * @param string $layout The layout view to wrap the rendered view in.
+   * @return string
+   * @author Robert Kosek
+   **/
+  protected function view($name, $bind=array(), $layout=null) {
+    $file = './application/views/'.strtolower($name).'.php';
+    if(file_exists($file)) {
+      try {
+        ob_start();
+        extract($bind);
+        include $file; // faster than require or _once variations
+        
+        $result = ob_get_contents();
+        ob_end_clean();
+      } catch (Exception $e) {
+        throw new TemplateException("Error rendering template \"${name}.php\".", 0, $e);
       }
+      
+      if(isset($layout)) {
+        try {
+          $bind['yield'] = $result;
+          return $this->view($layout, $bind);
+        } catch (Exception $e) {
+          throw new TemplateException("Error rendering layout \"${layout}.php\".", 0, $e);
+        }
+      }
+      
+      return $result;
     }
-    ob_end_flush();
-    return "<p><b>Missing Template:</b> application/views/{$name}</p>";
+    
+    // No valid template
+    throw new TemplateException("The template \"${name}.php\" does not exist.");
+    return "";
   }
 }
 
@@ -62,8 +101,17 @@ final class Micro {
   static $default_controller = 'welcome';
   private static $missing_route;
 
+  /**
+   * Adds a route to the end of the list; items are now checked in the order that they
+   * were added in.
+   *
+   * @param string $pattern Contains either a route string with starting slash, or a regular expression.
+   * @param callback $callback Contains either an array for the route (non-regex), or a function callback which takes the matches array and returns path info.
+   * @param string $type Either 'regex' or 'match' for route types.
+   * @author Robert Kosek
+   */
   static function add_route($pattern, $callback, $type = 'regex') {
-    array_unshift(Micro::$routes, array($type, $pattern, $callback));
+    array_push(Micro::$routes, array($type, $pattern, $callback));
   }
 
   static function handle_route($uri) {
@@ -80,7 +128,7 @@ final class Micro {
           break;
         case 'match':
           if(strcasecmp($uri, $pattern) == 0) {
-            return $callback; // array of the controller/action/params
+            return $callback; // actually an array of the controller/action/params
           }
           break;
       }
@@ -98,7 +146,8 @@ final class Micro {
     }
     $class = ucfirst($controller);
 
-    $file = "./application/controllers/$controller.php";
+    $file = MICRO_PATH . "/application/controllers/$controller.php";
+    
     if(is_file($file)) {
       if(class_exists($class) == false) { include $file; }
       $control = new $class($this);
@@ -118,6 +167,6 @@ final class Micro {
   }
 }
 
-foreach(glob('./application/includes/*.php') as $file) { include $file; }
+foreach(glob(MICRO_PATH . '/application/includes/*.php') as $file) { include $file; }
 $micro = new Micro();
 $micro->dispatch(Micro::handle_route(REQUEST_URI));

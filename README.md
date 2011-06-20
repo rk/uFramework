@@ -1,12 +1,29 @@
 &micro;Framework
 ================
 
+Version 1.0RC2
+--------------
+
+Well, it's been a long time since I worked to maintain Micro. Here's a bit of a changelog to detail what has changed between this and the previous release candidate.
+
+  * The `link()` helper conflicted with a PHP function for creating a symbolic link. Renamed to `link_to()` instead.
+  
+  * The `absolute_path()` helper was rewritten slightly, it now URL Encodes the path information sent to it; this avoids the possibility of XSS attacks by the `link_to()` helper and any third-party helpers.
+  
+  * Now the `Controller->view()` method takes an optional third argument: layout. If you specify a layout to wrap the view in, the layout will be called with the same `$bind` variables, plus the rendered content from the view as a new `$yield` variable (make sure to echo this out in your layout). The resulting content is still returned to its caller.
+  
+  * Better exception handling for `Controller->view()`. Instead of returning a string when an error occurs, it now throws an exception of TemplateException type. If the template itself throws an exception it throws the same type of exception wrapping the previous exception in new one. The layout, if it raises an exception, will also have its exceptions wrapped in this same type of exception.
+  
+  * Started work on `__autoload()`. I should have done this before. When I finish transitioning away from the "include all" that occurs on the includes directory this should only load the `default.php` file and whatever classes you request. Helpers could be included differently, depending on what I decide.
+  
+  * Relative routing is now absolute routing to files. This should provide a little speedup on shared servers (as relative routing can be a total mess).
+
 Version 1.0RC1 is Here!
 --------------------
 
 This is good news and I'm almost unsure of if I should be excited or not. After almost two months of silence the internal, very tentative, heavily refactored and rewritten version 1.0 is nearly ready for release. Instead of a changelog, which would be too much to maintain over two months of chaotic programming, I may as well state what is the same as before.
 
-The controller class hasn't changed, much. It is much slimmer now, though, and has only one method (`$this->view`) which used to be in an output class. I found that having a seperate class for output brought no value. And that's where the similarities end.
+The controller class hasn't changed, much. It is much slimmer now, though, and has only one method (`$this->view`) which used to be in an output class. I found that having a separate class for output brought no value. And that's where the similarities end.
 
 Perhaps now you see why it's been taking so long. Backwards-compatibility is thoroughly broken, the documentation is no longer relevant, and I've been redesigning the project website to herald the change. There is still much to do, but that's why I'm only committing a release candidate for the moment.
 
