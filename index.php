@@ -22,9 +22,11 @@
 */
 
 define('START', microtime(true));
-define('MICRO', '1.0RC');
+define('MICRO', '1.0RC3');
 define('REQUEST_URI', isset($_GET['p']) ? $_GET['p'] : '');
-define('MICRO_PATH', dirname(__FILE__))
+define('MICRO_PATH', dirname(__FILE__));
+
+ini_set("show_errors", 1);
 error_reporting(E_ALL | E_STRICT);
 
 function __autoload($class) {
@@ -39,8 +41,29 @@ function __autoload($class) {
   }
 }
 
-function redirect($to) {
-  header('Location: '.$to);
+function redirect($to, $code=303) {
+  $statuses = array(
+    // Cached client-side; always redirects to the target URL.
+    301 => 'HTTP/1.1 301 Moved Permanently',
+    // Most common redirect code, but it can be cached and forces resubmission of forms.
+    302 => 'HTTP/1.1 302 Found',
+    // This lets us redirect w/o caching the page, and no form resubmits!
+    303 => 'HTTP/1.1 303 See Other',
+    // Outputs no body (sorta like die but w/headers only).
+    304 => 'HTTP/1.1 304 Not Modified',
+    // Redirects to a proxy that must be used to access the redirecting page.
+    305 => 'HTTP/1.1 305 Use Proxy',
+    // This may or may not be cached depending on Cache-Control / Expires; may alert user
+    // for POST requests.
+    307 => 'HTTP/1.1 307 Temporary Redirect'
+  );
+  
+  header($statuses[$code]);
+  
+  // the Not Modified response shouldn't output anything.
+  if($code == 304) exit(0);
+  
+  header('Location: ' . $to);
   exit(0);
 }
 

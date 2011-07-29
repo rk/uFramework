@@ -7,6 +7,24 @@
 <IfModule mod_rewrite.c>
   RewriteEngine on
   # skip whitelisted directories
-  RewriteRule ^(stylesheets|images|javascripts|favicon|robots\.txt|index\.php) - [L]
-  RewriteRule ([-_\w\/]*) ?p=$1 [NE,NC,QSA]
+  #RewriteRule ^(stylesheets|images|javascripts|favicon|robots\.txt|index\.php) - [L]
+  #RewriteRule ([-_\w\/]*) ?p=$1 [NE,NC,QSA]
+  
+  # You'll have to change this to the root path to your website. I access it from
+  # http://localhost/~robert/uFramework/
+  RewriteBase /~robert/uFramework/
+  
+  # redirect/rewrite anything pointing to the application folder to index.php
+  RewriteRule ^(?:application)\b.* index.php?p=$0 [L]
+  
+  # allow existing files and folders through (except application/)
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+
+  # rewrite all others to the index.php file
+  RewriteRule .* index.php?p=$0 [PT]
+</IfModule>
+
+<IfModule mod_deflate.c>
+  #AddOutputFilterByType DEFLATE text/css application/x-javascript application/javascript
 </IfModule>

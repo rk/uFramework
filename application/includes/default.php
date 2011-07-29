@@ -1,5 +1,11 @@
 <?php
 
+/* CONFIG --------------------------------------------------------------------------------------- */
+
+$config = array(
+  'sess_cookie' => 'micro'
+);
+
 /* ROUTING -------------------------------------------------------------------------------------- */
 
 // it's my personal naming convention to prefix routing callbacks with _r
@@ -7,14 +13,14 @@ function _r_generic_route($matches) {
   return array(
     $matches['controller'],
     either($matches['action'], 'index'),
-    empty($matches['glob']) ? explode('/', ltrim('/',$matches['glob'])) : null
+    isset($matches['glob']) ? explode('/', ltrim('/', urldecode($matches['glob']))) : null
   );
 }
 
 // Route priority is in the reverse of the order it is registered;
 // that is, the last route is tested first
 Micro::add_route('', array('welcome', 'index'), 'match');
-Micro::add_route('#^(?P<controller>[\w][-_\w]*)(?:/(?P<action>[\w][-_\w]*))?(?P<glob>(?:/[\w][-_\w]*)*)$#', '_r_generic_route');
+Micro::add_route('#^(?P<controller>[\w][-_\w]*)(?:/(?P<action>[\w][-_\w]*)(?P<glob>(?:/[\w][-_+%\w]*)*))?$#', '_r_generic_route');
 
 /* HTML HELPERS --------------------------------------------------------------------------------- */
 
