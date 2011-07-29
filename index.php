@@ -67,6 +67,10 @@ function redirect($to, $code=303) {
   exit(0);
 }
 
+function not_modified() {
+  redirect(null, 304);
+}
+
 // returns $b if $a is empty; works best when $b is a literal and is unevaluated.
 function either($a,$b) {
   return empty($a) ? $b : $a;

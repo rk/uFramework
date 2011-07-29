@@ -1,8 +1,37 @@
 &micro;Framework
 ================
 
-Version 1.0RC2
---------------
+Version 1.0 RC3
+---------------
+
+Fixed some significant typos and improved the .htaccess file a *lot*.
+
+###Typos
+
+  * Default route would split parameters in the "glob" section when no glob section was matched. Now checked with `isset()`, not `empty()`.
+  
+  * Default route would possibly accept parameters with no specified action. Made the regex match against an optional action (with optional parameters) instead. Since regular expressions are usually greedy this shouldn't have been an issue, but I'm playing it safe.
+
+###Improvements
+
+  * The `redirect()` helper now supports almost all redirect status codes. 
+
+  * The `redirect()` helper now defaults to a status of 303, which doesn't allow caching or resubmission of a page when redirecting (when POSTing).
+  
+  * A new `not_modified()` helper for when you want to force the client to keep their cached file.
+  
+###.htaccess
+  
+  * Now supports a RewriteBase parameter so that uFramework works in subdirectories by default.
+  
+  * Now protects the `application` folder and redirects all attempts to access it directly through `index.php`.
+  
+  * Now allows direct access to any file/directory that exists outside of the `application` folder.
+  
+  * Will now compress your javascript/css files by default.
+
+Version 1.0 RC2
+---------------
 
 Well, it's been a long time since I worked to maintain Micro. Here's a bit of a changelog to detail what has changed between this and the previous release candidate.
 
@@ -18,8 +47,8 @@ Well, it's been a long time since I worked to maintain Micro. Here's a bit of a 
   
   * Relative routing is now absolute routing to files. This should provide a little speedup on shared servers (as relative routing can be a total mess).
 
-Version 1.0RC1 is Here!
---------------------
+Version 1.0 RC1 is Here!
+------------------------
 
 This is good news and I'm almost unsure of if I should be excited or not. After almost two months of silence the internal, very tentative, heavily refactored and rewritten version 1.0 is nearly ready for release. Instead of a changelog, which would be too much to maintain over two months of chaotic programming, I may as well state what is the same as before.
 
