@@ -30,17 +30,23 @@ ini_set("display_errors", 1);
 error_reporting(E_ALL | E_STRICT);
 
 function __autoload($class) {
-  $paths = array('includes', 'controllers');
+  $file = MICRO_PATH . "/application/includes/" . strtolower($class) . '.class.php';
   
-  foreach($paths as $path) {
-    $file = MICRO_PATH . "/application/${path}/" . strtolower($class) . '.class.php';
-    
-    if(file_exists($file)) {
-      include $file;
-    }
+  if(file_exists($file)) {
+    include $file;
   }
 }
 
+/**
+ * This function redirects the user's browser to the first parameter (must be a valid address),
+ * with a status code of the second parameter (defaults to 303). Supports status codes 301-307,
+ * see the HTTP 1.1 standard for documentation.
+ *
+ * @param string $to 
+ * @param integer $code 
+ * @return void
+ * @author Robert Kosek
+ */
 function redirect($to, $code=303) {
   $statuses = array(
     // Cached client-side; always redirects to the target URL.
@@ -67,11 +73,26 @@ function redirect($to, $code=303) {
   exit(0);
 }
 
+/**
+ * This helper function immediately halts the output and returns a 304 Not Modified status code
+ * to the browser.
+ *
+ * @return void
+ * @author Robert Kosek
+ **/
 function not_modified() {
   redirect(null, 304);
 }
 
-class TemplateException extends Exception {}
+class TemplateException extends Exception {
+  
+  // PHP 5.2 Compatibility
+  public function __construct($message, $code, $prev=null) {
+    parent::__construct($message, $code);
+    if(isset($prev)) { $this->previous = $prev; }
+  }
+  
+}
 
 class FourOhFourException extends Exception {
   public function __construct($message, $uri) {
@@ -112,6 +133,25 @@ HTML;
 }
 
 abstract class Controller {
+  private static $loaded_modules = array();
+  
+  /**
+   * Pass in names of modules under application/modules, and the file 'module.php' will be
+   * included. This file must include all other files required by the library/package/module.
+   * Modules will only be required once, and can be safely used in a customized controller
+   * defined within the includes directory and inherited from.
+   *
+   * @return boolean
+   * @author Robert Kosek
+   **/
+  public function require_modules() {
+    foreach(get_func_args() as $name) {
+      if(empty(self::$loaded_modules[$name])) {
+        self::$loaded_modules[$name] = (require MICRO_PATH . "/application/modules/{$name}/module.php");
+      }
+    }
+  }
+  
   /**
    * Returns the rendered template. If the template is not found, the method throws an exception.
    * If the method is called with a $layout param, that "view" is called with a $yield variable
@@ -125,6 +165,7 @@ abstract class Controller {
    **/
   protected function view($name, $bind=array(), $layout=null) {
     $file = './application/views/'.strtolower($name).'.php';
+
     if(file_exists($file)) {
       try {
         ob_start();
@@ -221,7 +262,7 @@ final class Micro {
       
       $control = new $class();
       // Pass the params as an array so we don't hit an "expected parameter" error from the
-      // method we're calling.
+      // method we're calling if we use call_user_func_array().
       $control->$action($params);
       
       return $control;
@@ -237,11 +278,14 @@ final class Micro {
   }
 }
 
-foreach(glob(MICRO_PATH . '/application/includes/*.php') as $file) { include $file; }
+include MICRO_PATH . '/application/includes/config.php';
+include MICRO_PATH . '/application/includes/helpers.php';
+
 try {
   $micro = new Micro();
   $controller = $micro->dispatch(Micro::handle_route(REQUEST_URI));
 } catch (Exception $e) {
+  // a very rudimentary error page...
   echo $e;
 }
 
