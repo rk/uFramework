@@ -5,7 +5,7 @@
   ==========
 
   uFramework was written by Robert Kosek, and is available free online at
-    http://github.com/rk/uframework/tree/master
+    https://github.com/rk/uframework/tree/master
 
   LICENSE
   -------
@@ -26,7 +26,7 @@ define('MICRO', '1.0RC3');
 define('REQUEST_URI', isset($_GET['p']) ? $_GET['p'] : '');
 define('MICRO_PATH', dirname(__FILE__));
 
-ini_set("show_errors", 1);
+ini_set("display_errors", 1);
 error_reporting(E_ALL | E_STRICT);
 
 function __autoload($class) {
@@ -71,12 +71,45 @@ function not_modified() {
   redirect(null, 304);
 }
 
-// returns $b if $a is empty; works best when $b is a literal and is unevaluated.
-function either($a,$b) {
-  return empty($a) ? $b : $a;
+class TemplateException extends Exception {}
+
+class FourOhFourException extends Exception {
+  public function __construct($message, $uri) {
+    parent::__construct($message);
+    $this->uri = $uri;
+    $this->code = 404;
+  }
+  
+  public function __toString() {
+    return "<p><strong>{$this->message}</strong><br/>Couldn't find /{$this->uri}</p>";
+  }
 }
 
-class TemplateException extends Exception {}
+class RoutingException extends FourOhFourException {
+  public $controller;
+  public $action;
+  public $parameters;
+  
+  public function __construct($message, $routeData) {
+    parent::__construct($message, REQUEST_URI);
+    
+    $this->controller = ucfirst($routeData[0]);
+    $this->action = ucfirst($routeData[1]);
+    $this->parameters = isset($routeData[2]) ? $routeData[2] : array();
+  }
+  
+  public function __toString() {
+    $params = '"' . join('", "', $this->parameters) . '"';
+    return <<<HTML
+<p>
+  <strong>{$this->message}</strong><br/>
+  Controller: <code>{$this->controller}</code><br/>
+  Action: <code>{$this->action}</code><br/>
+  Parameters: <code>{$params}</code>
+</p>
+HTML;
+  }
+}
 
 abstract class Controller {
   /**
@@ -126,7 +159,6 @@ final class Micro {
   /**** ROUTE HANDLING ****/
   static $routes = array();
   static $default_controller = 'welcome';
-  private static $missing_route;
 
   /**
    * Adds a route to the end of the list; items are now checked in the order that they
@@ -142,7 +174,8 @@ final class Micro {
   }
 
   static function handle_route($uri) {
-    $route_data = Micro::$missing_route;
+    // $route_data = Micro::$missing_route;
+    $route_data = null;
 
     foreach(Micro::$routes as $group) {
       list($type, $pattern, $callback) = $group;
@@ -160,40 +193,56 @@ final class Micro {
           break;
       }
     }
+    
+    if($route_data === null) { throw new FourOhFourException("404: Unknown Route", $uri); }
+    
     return $route_data;
   }
 
   // Dispatcher, call for internal redirect; params is optional
   public function dispatch($info) {
-    $params = null;
-    if(isset($info[2])) {
+    if(count($info) === 3) {
       list($controller, $action, $params) = $info;
-    } else {
+    } elseif(count($info)) {
+      $params = null;
       list($controller, $action) = $info;
     }
+    
     $class = ucfirst($controller);
 
-    $file = MICRO_PATH . "/application/controllers/$controller.php";
+    $file = MICRO_PATH . "/application/controllers/{$controller}.php";
     
-    if(is_file($file)) {
-      if(class_exists($class) == false) { include $file; }
-      $control = new $class($this);
-      if(!method_exists($control, $action)) { return $this->dispatch(Micro::$missing_route); }
+    if(is_file($file) && class_exists($class) == false) {
+      include $file;
+
+      if(!method_exists($class, $action)) {
+        throw new RoutingException("404: Unknown Action", $info);
+      }
+      
+      $control = new $class();
+      // Pass the params as an array so we don't hit an "expected parameter" error from the
+      // method we're calling.
       $control->$action($params);
+      
       return $control;
-    } else {
-      if($info === Micro::$missing_route) { exit(0); }
-      return $this->dispatch(Micro::$missing_route);
     }
+    
+    throw new RoutingException("404: Unknown Controller", $info);
   }
 
   /**** MAGIC STUFF ****/
   function __construct() {
-    $referrer = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '';
-    Micro::$missing_route = array(Micro::$default_controller, 'missing', array(REQUEST_URI, $referrer));
+    // $referrer = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '';
+    // Micro::$missing_route = array(Micro::$default_controller, 'missing', array(REQUEST_URI, $referrer));
   }
 }
 
 foreach(glob(MICRO_PATH . '/application/includes/*.php') as $file) { include $file; }
-$micro = new Micro();
-$micro->dispatch(Micro::handle_route(REQUEST_URI));
+try {
+  $micro = new Micro();
+  $controller = $micro->dispatch(Micro::handle_route(REQUEST_URI));
+} catch (Exception $e) {
+  echo $e;
+}
+
+?>

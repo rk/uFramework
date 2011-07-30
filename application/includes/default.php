@@ -10,17 +10,26 @@ $config = array(
 
 // it's my personal naming convention to prefix routing callbacks with _r
 function _r_generic_route($matches) {
-  return array(
-    $matches['controller'],
-    either($matches['action'], 'index'),
-    isset($matches['glob']) ? explode('/', ltrim('/', urldecode($matches['glob']))) : null
-  );
+  $result = array($matches['controller'], isset($matches['action']) ? $matches['action'] : 'index');
+  
+  // The third element (parameters), if it exists, must always be an array.
+  if(isset($matches['glob'])) {
+    if(strpos($matches['glob'], '/') === false) {
+      // singular parameter
+      $result[] = array(urldecode($matches['glob']));
+    } else {
+      // multiple parameters
+      $result[] = array_map('urldecode', explode('/', $matches['glob']));
+    }
+  }
+  
+  return $result;
 }
 
 // Route priority is in the reverse of the order it is registered;
 // that is, the last route is tested first
 Micro::add_route('', array('welcome', 'index'), 'match');
-Micro::add_route('#^(?P<controller>[\w][-_\w]*)(?:/(?P<action>[\w][-_\w]*)(?P<glob>(?:/[\w][-_+%\w]*)*))?$#', '_r_generic_route');
+Micro::add_route('#^(?P<controller>[a-z][-_a-z]*)(?:/(?P<action>[a-z][-_a-z]*)/?(?P<glob>[^\#]*))?$#i', '_r_generic_route');
 
 /* HTML HELPERS --------------------------------------------------------------------------------- */
 
