@@ -4,11 +4,15 @@
 Version 1.0 RC3
 ---------------
 
-Fixed some significant typos and improved the .htaccess file a *lot*.
+Fixed some significant typos and improved the .htaccess file a *lot*. A few new features as well.
+
+###New Features
+
+  * Plugins and modules are now supported. In your controller use the method, `$this->require_modules('pChart', 'paypal');` to include `application/modules/pChart/module.php` and `application/modules/paypal/module.php`. In these files you can include all scripts necessary for the module/plugin to function.
 
 ###Typos
 
-  * Default route would split parameters in the "glob" section when no glob section was matched. Now checked with `isset()`, not `empty()`.
+  * Default route would split parameters in the "glob" section when no glob section was matched. Now checked with `isset()`, not `empty()`. Also, it would not correctly parse 1-2 arguments.
   
   * Default route would possibly accept parameters with no specified action. Made the regex match against an optional action (with optional parameters) instead. Since regular expressions are usually greedy this shouldn't have been an issue, but I'm playing it safe.
 
@@ -19,6 +23,10 @@ Fixed some significant typos and improved the .htaccess file a *lot*.
   * The `redirect()` helper now defaults to a status of 303, which doesn't allow caching or resubmission of a page when redirecting (when POSTing).
   
   * A new `not_modified()` helper for when you want to force the client to keep their cached file.
+
+  * No longer globbing and including everything in the includes folder on every request. Includes only config.php and helpers.php by default, and will autoload any classes you refer to as `application/includes/customcontroller.class.php`.
+  
+  * Now using Exceptions for better error handling, including error chaining.
   
 ###.htaccess
   

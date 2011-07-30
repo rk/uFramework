@@ -92,6 +92,18 @@ class TemplateException extends Exception {
     if(isset($prev)) { $this->previous = $prev; }
   }
   
+  public function __toString() {
+    return <<<HTML
+<p>
+  <strong>Template Exception</strong><br/>
+  {$this->message}
+</p>
+<p>
+  <strong>Child Exception</strong><br/>
+  {$this->prev}
+</p>
+HTML;
+  }
 }
 
 class FourOhFourException extends Exception {
